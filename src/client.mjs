@@ -185,7 +185,7 @@ class Client extends EventTarget {
       case 'game_stopped':
         this.roomData.setRoomIsStopped()
         break
-      case 'pong'
+      case 'pong':
         clearTimeout(this.heartbeatTimeout)
         this.heartbeatTimeout = setTimeout(this.dieFromTimeout, this.heartbeatTimeoutMillis)
         break
