@@ -77,3 +77,15 @@ These events should at least include:
 The client supports heartbeats - it sends a `{kind: "ping"}` event every ~30 seconds, and if it doesnt receive a `{kind: "pong"}` event within ~60 seconds, it disconnects.
 This is disabled by default, but can be optionally enabled if the server supports it.
 
+### Cli client
+This client comes with a CLI client that can be launched with
+```npm run client```
+
+It relies on `--experimental-repl-await`, so it requires Node 10+ https://github.com/nodejs/node/issues/13209#issuecomment-385852791
+
+This can be helpful to test the server, send arbitrary events to it.
+
+### ES6-style modules and mjs
+The client code here uses the `.mjs` extension - https://v8.dev/features/modules#mjs
+
+The primary reason is so that it can be used both in the web and as a cli client.
