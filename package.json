@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "client": "node scripts/cli_client.mjs"
+    "client": "node --experimental-repl-await scripts/cli_client.mjs"
   },
   "name": "concentration-stub",
   "version": "1.0.0",

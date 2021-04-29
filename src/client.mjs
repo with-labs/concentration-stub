@@ -5,26 +5,19 @@ import RoomData from './client/room_data.mjs'
 let count = 0
 
 class Client extends EventTarget {
-  constructor(roomRoute, heartbeatIntervalMillis=30000, heartbeatTimeoutMillis=60000) {
+  constructor(roomRoute="default", heartbeatIntervalMillis=30000, heartbeatTimeoutMillis=60000) {
     super()
     this.id = count++
     this.eventId = 0
     this.ready = false
     this.roomRoute = roomRoute
-    this.messageListeners = {}
     this.promiseResolvers = []
 
     this.heartbeatIntervalMillis = heartbeatIntervalMillis
     this.heartbeatTimeoutMillis = heartbeatTimeoutMillis
 
-    this.heartbeat = async () => {
-      clearTimeout(this.heartbeatTimeout)
-      const response = await this.sendEventWithPromise("ping", {})
-      if(response.kind == "pong") {
-        this.heartbeatTimeout = setTimeout(this.dieFromTimeout, this.heartbeatTimeoutMillis)
-      } else {
-        this.disconnect()
-      }
+    this.heartbeat = () => {
+      this.sendEvent("ping", {})
     }
 
     this.dieFromTimeout = () =>  {
@@ -40,7 +33,7 @@ class Client extends EventTarget {
       const socketUrl = `wss://${window.location.host}`
       this.socket = new WebSocket(socketUrl)
       this.socket.addEventListener('open', () => {
-        this.startHeartbeat()
+        // this.startHeartbeat()
         this.ready = true
         resolve(this)
       })
@@ -54,17 +47,6 @@ class Client extends EventTarget {
       this.socket.addEventListener('message', (message) => {
         try {
           const event = new ClientReceivedEvent(this, JSON.parse(message.data))
-          if(this.promiseResolvers.length > 0) {
-            const newResolvers = []
-            this.promiseResolvers.forEach((resolver) => {
-              if(!resolver(event)) {
-                newResolvers.push(resolver)
-              } else {
-              }
-            })
-            this.promiseResolvers = newResolvers
-          }
-
           this.handleEvent(event)
           this.dispatchEvent(event)
         } catch(e) {
@@ -75,37 +57,32 @@ class Client extends EventTarget {
   }
 
   /**
-    Note: to rely on these as async methods,
-    the server must return a request_id field
-    that matches the sent event.id field.
+    Listen on the `joined_room` event to know when the connection goes through
   */
-  async joinRoom(userName) {
+  joinRoom(userName) {
     this.sendEvent("auth", { room_route: this.roomRoute, user_name: userName })
   }
 
   onAuthResponse(response) {
     this.peerData = new ClientPeerData(response.payload)
     this.roomData = new RoomData(response.payload)
+    const event = new Event("joined_room")
+    this.dispatchEvent(event)
   }
 
   sendGameStart() {
     this.sendEvent('start_game', { })
   }
 
-  reveal(row, column) {
-    this.sendEvent('reveal', { row, column })
-  }
-
-  submitMatch(index1, index2) {
-    this.sendEvent('submit_match', { index1, index2 })
+  reveal(index) {
+    this.sendEvent('reveal', { index })
   }
 
   updateName(newName) {
-    return this.sendEventWithPromise("update_display_name", { display_name: newName })
+    return this.sendEvent("update_display_name", { display_name: newName })
   }
 
   get userId() {
-    this.requireReady()
     return this.peerData.userId()
   }
 
@@ -146,20 +123,8 @@ class Client extends EventTarget {
     })
   }
 
-  async broadcast(message) {
-    return this.sendEventWithPromise("echo", { message })
-  }
-
-  /*
-    Only works if the server echoes back a request_id, mirroring the
-    original event.id sent to it.
-  */
-  async sendEventWithPromise(kind, payload) {
-    const event = this.makeEvent(kind, payload)
-    const { promise, resolver } = this.makeEventPromise(event)
-    this.promiseResolvers.push(resolver)
-    this.sendEvent(event)
-    return promise
+  broadcast(message) {
+    return this.sendEvent("echo", { message })
   }
 
   sendEvent(event) {
@@ -184,28 +149,6 @@ class Client extends EventTarget {
       id: `${this.id}_${this.eventId++}`,
       kind: kind,
       payload: payload
-    }
-  }
-
-  makeEventPromise(event) {
-    let resolvePromise = null
-    const promise = new Promise((resolve, reject) => {
-      resolvePromise = resolve
-    })
-    const resolver = (receivedEvent, force) => {
-      if(force) {
-        return resolvePromise()
-      }
-      const response = receivedEvent
-      if(response.request_id == event.id) {
-        resolvePromise(response)
-        return true
-      }
-      return false
-    }
-    return {
-      promise: promise,
-      resolver: resolver
     }
   }
 
@@ -236,23 +179,23 @@ class Client extends EventTarget {
       case 'participant_left':
         this.peerData.removePeer(event.payload)
         break
-      case 'start_game':
+      case 'game_started':
         this.roomData.setRoomIsStarted()
         break
-       case 'game_stopped':
+      case 'game_stopped':
         this.roomData.setRoomIsStopped()
         break
-    }
-  }
+      case 'pong'
+        clearTimeout(this.heartbeatTimeout)
+        this.heartbeatTimeout = setTimeout(this.dieFromTimeout, this.heartbeatTimeoutMillis)
+        break
 
-  requireReady() {
-   if(!this.ready) {
-      throw "Please connect"
     }
   }
 
   startHeartbeat() {
     this.heartbeatInterval = setInterval(this.heartbeat, this.heartbeatIntervalMillis)
+    this.heartbeatTimeout = setTimeout(this.dieFromTimeout, this.heartbeatTimeoutMillis)
     this.heartbeat()
   }
 

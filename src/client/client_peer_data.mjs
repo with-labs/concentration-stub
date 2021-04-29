@@ -9,7 +9,7 @@ class ClientPeerData {
   }
 
   peersExcludingSelf() {
-    return this.peersIncludingSelf().filter((p) => (p.sessionId() == this.sessionId()))
+    return this.peersIncludingSelf().filter((p) => (p.self.session_id == this.sessionId()))
   }
 
   peersIncludingSelf() {
@@ -34,13 +34,13 @@ class ClientPeerData {
 
   getPeer(participant) {
     const peer = this._roomData.peers.find((p) => {
-      return p.sessionId == participant.sessionId
+      return p.session_id == participant.session_id
     })
     return peer
   }
 
   removePeer(participant) {
-    const index = this._roomData.peers.findIndex((p) => (p.sessionId == participant.sessionId))
+    const index = this._roomData.peers.findIndex((p) => (p.session_id == participant.session_id))
     if(index > -1) {
       this._roomData.peers.splice(index, 1)
     }
@@ -62,7 +62,7 @@ class ClientPeerData {
   }
 
   sessionId() {
-    return this._roomData.sessionId
+    return this._roomData.self.session_id
   }
 
 }

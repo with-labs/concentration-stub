@@ -4,7 +4,7 @@ class RoomData {
   }
 
   get deck() {
-    return this._authData.roomData.deck
+    return this._authData.room_data.deck
   }
 
   get authData() {
@@ -12,15 +12,15 @@ class RoomData {
   }
 
   setRoomIsStarted() {
-    this.authData.roomData.started = true
+    this.authData.room_data.started = true
   }
 
   setRoomIsStopped() {
-    this.authData.roomData.started = false
+    this.authData.room_data.started = false
   }
 
   isStarted() {
-    return this.authData.roomData.started
+    return this.authData.room_data.started
   }
 }
 

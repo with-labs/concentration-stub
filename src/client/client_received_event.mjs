@@ -1,13 +1,13 @@
 class ClientReceivedEvent extends Event{
   constructor(client, data) {
     super(data.kind)
-    this.contents = data
+    this._data = data
     this._client = client
     Object.assign(this, data)
   }
 
-  data() {
-    return this.contents
+  get data() {
+    return this._data
   }
 }
 
