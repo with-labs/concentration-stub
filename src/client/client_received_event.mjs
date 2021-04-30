@@ -1,4 +1,4 @@
-class ClientReceivedEvent extends Event{
+class ClientReceivedEvent extends Event {
   constructor(client, data) {
     super(data.kind)
     this._data = data

@@ -8,7 +8,6 @@ class Client extends EventTarget {
   constructor(roomRoute="default", heartbeatIntervalMillis=30000, heartbeatTimeoutMillis=60000) {
     super()
     this.id = count++
-    this.eventId = 0
     this.ready = false
     this.roomRoute = roomRoute
     this.promiseResolvers = []
@@ -28,9 +27,8 @@ class Client extends EventTarget {
   /**********************************/
   /* API: usually use these methods */
   /**********************************/
-  async connect() {
+  async connect(socketUrl) {
     return new Promise((resolve, reject) => {
-      const socketUrl = `wss://${window.location.host}`
       this.socket = new WebSocket(socketUrl)
       this.socket.addEventListener('open', () => {
         // this.startHeartbeat()
@@ -40,9 +38,6 @@ class Client extends EventTarget {
       this.socket.addEventListener('close', () => {
         this.stopHeartbeat()
         this.ready = false
-        this.promiseResolvers.forEach((resolver) => {
-          resolver(null, true)
-        })
       })
       this.socket.addEventListener('message', (message) => {
         try {
@@ -127,8 +122,8 @@ class Client extends EventTarget {
     return this.sendEvent("echo", { message })
   }
 
-  sendEvent(event) {
-    const stringEvent = JSON.stringify(event)
+  sendEvent(kind, payload) {
+    const stringEvent = JSON.stringify(this.makeEvent(kind, payload))
     this.send(stringEvent)
   }
 
@@ -146,7 +141,6 @@ class Client extends EventTarget {
 
   makeEvent(kind, payload) {
     return {
-      id: `${this.id}_${this.eventId++}`,
       kind: kind,
       payload: payload
     }
