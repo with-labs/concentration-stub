@@ -20,7 +20,7 @@ class ClientPeerData {
     return this._roomData.peers.filter((p) => (p.authenticated))
   }
 
-  updatePeer(participant) {
+  addOrUpdatePeer(participant) {
     const existingPeer = this.getPeer(participant)
     if(existingPeer) {
       Object.assign(existingPeer, participant)
