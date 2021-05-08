@@ -147,9 +147,6 @@ class Client extends EventTarget {
   }
 
   handleEvent(event) {
-    if(!this.peerData) {
-      return
-    }
     switch(event.kind) {
       case 'auth.response':
         this.onAuthResponse(event)
