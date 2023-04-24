@@ -1,5 +1,6 @@
 # concentration-stub
-This is a javascript client for a multiplayer Concentration-style game https://en.wikipedia.org/wiki/Concentration_(card_game).
+This is a javascript client for a multiplayer Concentration-style game [Concentration_(card_game)](https://en.wikipedia.org/wiki/Concentration_(card_game)).
+
 
 The goal of this turn-based memory game is to find matching pairs of cards, which are presented face down on a grid.
 
